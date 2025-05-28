@@ -1,4 +1,3 @@
-
 export interface Player {
   id: string;
   name: string;
@@ -30,14 +29,14 @@ export const CATEGORY_LABELS: Record<Category, string> = {
   raposa: '🦊 Fox'
 };
 
-// Mapeamento de categorias para imagens de referência
+// Updated image paths to use public directory
 export const CATEGORY_IMAGES: Record<Category, string> = {
-  cavalo: 'src/types/cavalo.png',
-  estrela: 'src/types/estrela.png',
-  gato: 'src/types/gato.png',
-  linus: 'src/types/linus.png',
-  luminaria: 'src/types/luminaria.png',
-  mack: 'src/types/mack.jpg',
-  nike: 'src/types/nike.png',
-  raposa: 'src/types/raposa.jpg'
+  cavalo: '/types/cavalo.png',
+  estrela: '/types/estrela.png',
+  gato: '/types/gato.png',
+  linus: '/types/linus.png',
+  luminaria: '/types/luminaria.png',
+  mack: '/types/mack.jpg',
+  nike: '/types/nike.png',
+  raposa: '/types/raposa.jpg'
 };
