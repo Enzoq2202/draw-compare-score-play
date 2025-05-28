@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Tldraw, Editor, exportToBlob } from '@tldraw/tldraw';
 import '@tldraw/tldraw/tldraw.css';
@@ -24,6 +25,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
   const [timerActive, setTimerActive] = useState(false);
   const [showInstructions, setShowInstructions] = useState(true);
   const [imageError, setImageError] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const editorRef = useRef<Editor | null>(null);
 
   const currentPlayer = players[currentPlayerIndex];
@@ -36,6 +38,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
     setTimerActive(false);
     setShowInstructions(true);
     setImageError(false);
+    setImageLoaded(false);
     
     // Clear the canvas when editor is available
     if (editorRef.current) {
@@ -146,24 +149,35 @@ const GameBoard: React.FC<GameBoardProps> = ({
             </div>
             
             <div className="flex flex-col items-center space-y-6">
-              <div className="bg-gray-100 rounded-lg p-4 max-w-md">
+              <div className="bg-gray-100 rounded-lg p-4 max-w-sm w-full">
                 {imageError ? (
                   <div className="w-full h-64 flex items-center justify-center text-gray-500">
                     Failed to load reference image
                   </div>
                 ) : (
-                  <img 
-                    src={CATEGORY_IMAGES[gameCategory]}
-                    alt={CATEGORY_LABELS[gameCategory]}
-                    className="w-full h-64 object-contain rounded-lg shadow-md"
-                    onError={() => setImageError(true)}
-                  />
+                  <div className="relative">
+                    {!imageLoaded && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                      </div>
+                    )}
+                    <img 
+                      src={CATEGORY_IMAGES[gameCategory]}
+                      alt={CATEGORY_LABELS[gameCategory]}
+                      className={`w-full h-64 object-contain rounded-lg shadow-md transition-opacity duration-300 ${
+                        imageLoaded ? 'opacity-100' : 'opacity-0'
+                      }`}
+                      onLoad={() => setImageLoaded(true)}
+                      onError={() => setImageError(true)}
+                    />
+                  </div>
                 )}
               </div>
               
               <button
                 onClick={startDrawing}
-                className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-medium text-lg rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl"
+                disabled={!imageLoaded && !imageError}
+                className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-medium text-lg rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Start Drawing!
               </button>

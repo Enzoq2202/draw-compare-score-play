@@ -4,7 +4,9 @@ import PlayerSetup from '../components/PlayerSetup';
 import GameBoard from '../components/GameBoard';
 import ScoreDisplay from '../components/ScoreDisplay';
 import { checkBackendHealth } from '../utils/api';
-import { Player, GameState, Category, CATEGORIES } from '../types/game';
+import { getRandomCategory } from '../utils/gameUtils';
+import { useImagePreloader } from '../hooks/useImagePreloader';
+import { Player, GameState, Category } from '../types/game';
 
 const Index = () => {
   const [gameState, setGameState] = useState<GameState>('setup');
@@ -13,6 +15,9 @@ const Index = () => {
   const [scores, setScores] = useState<Array<{ player: Player; score: number; category: string }>>([]);
   const [backendHealthy, setBackendHealthy] = useState<boolean | null>(null);
   const [gameCategory, setGameCategory] = useState<Category | null>(null);
+  const [lastUsedCategory, setLastUsedCategory] = useState<Category | null>(null);
+  
+  const imagesLoaded = useImagePreloader();
 
   useEffect(() => {
     // Check backend health on load
@@ -31,9 +36,10 @@ const Index = () => {
 
   const handlePlayersSetup = (playerList: Player[]) => {
     setPlayers(playerList);
-    // Choose random category for the entire game
-    const randomCategory = CATEGORIES[Math.floor(Math.random() * CATEGORIES.length)];
+    // Choose random category avoiding the last used one
+    const randomCategory = getRandomCategory(lastUsedCategory);
     setGameCategory(randomCategory);
+    setLastUsedCategory(randomCategory);
     setGameState('playing');
   };
 
@@ -54,6 +60,7 @@ const Index = () => {
     setCurrentPlayerIndex(0);
     setScores([]);
     setGameCategory(null);
+    // Don't reset lastUsedCategory to avoid repetition in next game
   };
 
   if (backendHealthy === false) {
@@ -76,12 +83,14 @@ const Index = () => {
     );
   }
 
-  if (backendHealthy === null) {
+  if (backendHealthy === null || !imagesLoaded) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Connecting to VisComp backend...</p>
+          <p className="text-gray-600">
+            {!imagesLoaded ? 'Loading images...' : 'Connecting to VisComp backend...'}
+          </p>
         </div>
       </div>
     );
