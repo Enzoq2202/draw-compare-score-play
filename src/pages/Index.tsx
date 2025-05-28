@@ -4,7 +4,7 @@ import PlayerSetup from '../components/PlayerSetup';
 import GameBoard from '../components/GameBoard';
 import ScoreDisplay from '../components/ScoreDisplay';
 import { checkBackendHealth } from '../utils/api';
-import { Player, GameState } from '../types/game';
+import { Player, GameState, Category, CATEGORIES } from '../types/game';
 
 const Index = () => {
   const [gameState, setGameState] = useState<GameState>('setup');
@@ -12,6 +12,7 @@ const Index = () => {
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
   const [scores, setScores] = useState<Array<{ player: Player; score: number; category: string }>>([]);
   const [backendHealthy, setBackendHealthy] = useState<boolean | null>(null);
+  const [gameCategory, setGameCategory] = useState<Category | null>(null);
 
   useEffect(() => {
     // Check backend health on load
@@ -30,6 +31,9 @@ const Index = () => {
 
   const handlePlayersSetup = (playerList: Player[]) => {
     setPlayers(playerList);
+    // Choose random category for the entire game
+    const randomCategory = CATEGORIES[Math.floor(Math.random() * CATEGORIES.length)];
+    setGameCategory(randomCategory);
     setGameState('playing');
   };
 
@@ -49,6 +53,7 @@ const Index = () => {
     setPlayers([]);
     setCurrentPlayerIndex(0);
     setScores([]);
+    setGameCategory(null);
   };
 
   if (backendHealthy === false) {
@@ -88,11 +93,12 @@ const Index = () => {
         <PlayerSetup onPlayersSetup={handlePlayersSetup} />
       )}
       
-      {gameState === 'playing' && (
+      {gameState === 'playing' && gameCategory && (
         <GameBoard
           players={players}
           currentPlayerIndex={currentPlayerIndex}
           onTurnComplete={handleTurnComplete}
+          gameCategory={gameCategory}
         />
       )}
       

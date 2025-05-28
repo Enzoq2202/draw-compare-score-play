@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Tldraw, Editor, exportToBlob } from '@tldraw/tldraw';
 import '@tldraw/tldraw/tldraw.css';
-import { Player, Category, CATEGORIES, CATEGORY_LABELS, CATEGORY_IMAGES } from '../types/game';
+import { Player, Category, CATEGORY_LABELS, CATEGORY_IMAGES } from '../types/game';
 import { processImage } from '../utils/api';
 import Timer from './Timer';
 
@@ -10,14 +10,15 @@ interface GameBoardProps {
   players: Player[];
   currentPlayerIndex: number;
   onTurnComplete: (score: number, category: string) => void;
+  gameCategory: Category;
 }
 
 const GameBoard: React.FC<GameBoardProps> = ({
   players,
   currentPlayerIndex,
-  onTurnComplete
+  onTurnComplete,
+  gameCategory
 }) => {
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(60);
@@ -28,9 +29,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
   const currentPlayer = players[currentPlayerIndex];
 
   useEffect(() => {
-    // Reset for new turn and choose random category
-    const randomCategory = CATEGORIES[Math.floor(Math.random() * CATEGORIES.length)];
-    setSelectedCategory(randomCategory);
+    // Reset for new turn
     setIsDrawing(false);
     setIsSubmitting(false);
     setTimeRemaining(60);
@@ -56,7 +55,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
   };
 
   const submitDrawing = async () => {
-    if (!selectedCategory || !editorRef.current || isSubmitting) return;
+    if (!editorRef.current || isSubmitting) return;
 
     setIsSubmitting(true);
     setTimerActive(false);
@@ -88,23 +87,19 @@ const GameBoard: React.FC<GameBoardProps> = ({
       }
 
       // Submit to backend
-      const result = await processImage(blob, selectedCategory);
+      const result = await processImage(blob, gameCategory);
       
       // Complete the turn with the score
-      onTurnComplete(result.cosine_similarity, selectedCategory);
+      onTurnComplete(result.cosine_similarity, gameCategory);
       
     } catch (error) {
       console.error('Failed to submit drawing:', error);
       // Complete the turn with a score of 0 if there's an error
-      onTurnComplete(0, selectedCategory);
+      onTurnComplete(0, gameCategory);
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  if (!selectedCategory) {
-    return <div>Loading...</div>;
-  }
 
   return (
     <div className="min-h-screen p-4">
@@ -142,7 +137,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
           <div className="bg-white rounded-xl shadow-lg p-8 mb-6">
             <div className="text-center mb-6">
               <h3 className="text-2xl font-bold text-gray-800 mb-2">
-                Draw: {CATEGORY_LABELS[selectedCategory]}
+                Draw: {CATEGORY_LABELS[gameCategory]}
               </h3>
               <p className="text-gray-600 mb-6">
                 Use the reference image below as inspiration. You'll have 1 minute to draw!
@@ -150,11 +145,11 @@ const GameBoard: React.FC<GameBoardProps> = ({
             </div>
             
             <div className="flex flex-col items-center space-y-6">
-              <div className="bg-gray-100 rounded-lg p-4">
+              <div className="bg-gray-100 rounded-lg p-4 max-w-md">
                 <img 
-                  src={CATEGORY_IMAGES[selectedCategory]}
-                  alt={CATEGORY_LABELS[selectedCategory]}
-                  className="w-80 h-60 object-cover rounded-lg shadow-md"
+                  src={CATEGORY_IMAGES[gameCategory]}
+                  alt={CATEGORY_LABELS[gameCategory]}
+                  className="w-full h-64 object-contain rounded-lg shadow-md"
                 />
               </div>
               
@@ -170,23 +165,23 @@ const GameBoard: React.FC<GameBoardProps> = ({
 
         {/* Drawing Canvas */}
         {isDrawing && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Reference Image - Smaller on the side */}
             <div className="lg:col-span-1">
               <div className="bg-white rounded-xl shadow-lg p-4 sticky top-4">
                 <h4 className="text-lg font-medium text-gray-700 mb-3 text-center">
-                  Reference: {CATEGORY_LABELS[selectedCategory]}
+                  Reference: {CATEGORY_LABELS[gameCategory]}
                 </h4>
                 <img 
-                  src={CATEGORY_IMAGES[selectedCategory]}
-                  alt={CATEGORY_LABELS[selectedCategory]}
-                  className="w-full h-48 object-cover rounded-lg shadow-sm"
+                  src={CATEGORY_IMAGES[gameCategory]}
+                  alt={CATEGORY_LABELS[gameCategory]}
+                  className="w-full h-48 object-contain rounded-lg shadow-sm"
                 />
               </div>
             </div>
 
             {/* Drawing Canvas */}
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-3">
               <div className="bg-white rounded-xl shadow-lg overflow-hidden">
                 <div className="p-4 bg-gray-50 border-b flex items-center justify-between">
                   <span className="text-lg font-medium text-gray-700">
