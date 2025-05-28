@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Tldraw, Editor } from '@tldraw/tldraw';
+import { Tldraw, Editor, exportToBlob } from '@tldraw/tldraw';
 import '@tldraw/tldraw/tldraw.css';
 import { Player, Category, CATEGORIES, CATEGORY_LABELS, CATEGORY_IMAGES } from '../types/game';
 import { processImage } from '../utils/api';
@@ -70,8 +70,18 @@ const GameBoard: React.FC<GameBoardProps> = ({
         throw new Error('No content to export');
       }
 
-      // Export the drawing as PNG blob
-      const blob = await editorRef.current.exportAs(shapeIds, 'png');
+      // Export the drawing as PNG blob using the correct tldraw v3 API
+      const blob = await exportToBlob({
+        editor: editorRef.current,
+        ids: shapeIds,
+        format: 'png',
+        opts: {
+          background: false,
+          bounds: editorRef.current.getSelectionPageBounds() || editorRef.current.getViewportPageBounds(),
+          padding: 16,
+          darkMode: false,
+        },
+      });
 
       if (!blob) {
         throw new Error('Failed to export drawing');
