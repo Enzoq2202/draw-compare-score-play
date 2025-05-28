@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Tldraw, Editor, exportAs } from '@tldraw/tldraw';
 import '@tldraw/tldraw/tldraw.css';
@@ -64,14 +63,16 @@ const GameBoard: React.FC<GameBoardProps> = ({
       const shapes = editorRef.current.getCurrentPageShapes();
       const shapeIds = shapes.map(shape => shape.id);
       
-      // Export the drawing as PNG directly
-      const dataUrl = await exportAs(editorRef.current, shapeIds, 'png');
-      
-      // Convert data URL to blob
-      const imageBlob = dataURLToBlob(dataUrl);
+      // Export the drawing as PNG using the correct API
+      const blob = await exportAs(editorRef.current, shapeIds, 'png', {
+        background: true,
+        bounds: editorRef.current.getViewportPageBounds(),
+        padding: 16,
+        darkMode: false,
+      });
 
       // Submit to backend
-      const result = await processImage(imageBlob, selectedCategory);
+      const result = await processImage(blob, selectedCategory);
       
       // Complete the turn with the score
       onTurnComplete(result.cosine_similarity, selectedCategory);
