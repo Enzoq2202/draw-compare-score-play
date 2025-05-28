@@ -60,8 +60,17 @@ const GameBoard: React.FC<GameBoardProps> = ({
     setTimerActive(false);
 
     try {
-      // Export the drawing as SVG first, then convert to PNG
-      const svg = await exportAs(editorRef.current, editorRef.current.getShapeIds(), 'svg');
+      // Get all shapes on the canvas
+      const shapes = editorRef.current.getCurrentPageShapes();
+      const shapeIds = shapes.map(shape => shape.id);
+      
+      // Export the drawing as SVG
+      const svg = await exportAs(editorRef.current, shapeIds, 'svg', {
+        background: true,
+        bounds: editorRef.current.getViewportPageBounds(),
+        padding: 0,
+        darkMode: false,
+      });
       
       // Create a canvas to convert SVG to PNG
       const canvas = document.createElement('canvas');
@@ -82,7 +91,11 @@ const GameBoard: React.FC<GameBoardProps> = ({
           resolve(undefined);
         };
         img.onerror = reject;
-        img.src = 'data:image/svg+xml;base64,' + btoa(svg);
+        
+        // Convert SVG string to data URL
+        const svgBlob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(svgBlob);
+        img.src = url;
       });
 
       // Convert canvas to blob
