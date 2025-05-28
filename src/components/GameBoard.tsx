@@ -64,43 +64,11 @@ const GameBoard: React.FC<GameBoardProps> = ({
       const shapes = editorRef.current.getCurrentPageShapes();
       const shapeIds = shapes.map(shape => shape.id);
       
-      // Export the drawing as SVG
-      const svg = await exportAs(editorRef.current, shapeIds, 'svg', {
-        background: true,
-        bounds: editorRef.current.getViewportPageBounds(),
-        padding: 0,
-        darkMode: false,
-      });
+      // Export the drawing as PNG directly
+      const dataUrl = await exportAs(editorRef.current, shapeIds, 'png');
       
-      // Create a canvas to convert SVG to PNG
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const img = new Image();
-      
-      await new Promise((resolve, reject) => {
-        img.onload = () => {
-          canvas.width = 512;
-          canvas.height = 512;
-          
-          // Fill with white background
-          if (ctx) {
-            ctx.fillStyle = 'white';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          }
-          resolve(undefined);
-        };
-        img.onerror = reject;
-        
-        // Convert SVG string to data URL
-        const svgBlob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
-        const url = URL.createObjectURL(svgBlob);
-        img.src = url;
-      });
-
-      // Convert canvas to blob
-      const dataURL = canvas.toDataURL('image/png');
-      const imageBlob = dataURLToBlob(dataURL);
+      // Convert data URL to blob
+      const imageBlob = dataURLToBlob(dataUrl);
 
       // Submit to backend
       const result = await processImage(imageBlob, selectedCategory);
