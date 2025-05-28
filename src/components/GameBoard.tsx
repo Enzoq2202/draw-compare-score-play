@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Tldraw, Editor, exportAs } from '@tldraw/tldraw';
+import { Tldraw, Editor } from '@tldraw/tldraw';
 import '@tldraw/tldraw/tldraw.css';
 import { Player, Category, CATEGORIES, CATEGORY_LABELS } from '../types/game';
-import { processImage, dataURLToBlob } from '../utils/api';
+import { processImage } from '../utils/api';
 import Timer from './Timer';
 import CategorySelector from './CategorySelector';
 
@@ -62,14 +62,22 @@ const GameBoard: React.FC<GameBoardProps> = ({
       // Get all shapes on the canvas
       const shapes = editorRef.current.getCurrentPageShapes();
       const shapeIds = shapes.map(shape => shape.id);
-      
-      // Export the drawing as PNG blob using the correct tldraw v3 API
-      const blob = await editorRef.current.exportAs(shapeIds, 'png', {
+
+      // Export the drawing as SVG
+      const svg = await editorRef.current.getSvg(shapeIds, {
+        scale: 1,
         background: false,
         bounds: editorRef.current.getViewportPageBounds(),
         padding: 16,
         darkMode: false,
       });
+
+      if (!svg) {
+        throw new Error('No content to export');
+      }
+
+      // Convert SVG to PNG blob
+      const blob = await svgToPngBlob(svg);
 
       // Submit to backend
       const result = await processImage(blob, selectedCategory);
@@ -79,11 +87,49 @@ const GameBoard: React.FC<GameBoardProps> = ({
       
     } catch (error) {
       console.error('Failed to submit drawing:', error);
-      // Still complete the turn with a score of 0 if there's an error
+      // Complete the turn with a score of 0 if there's an error
       onTurnComplete(0, selectedCategory);
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Helper function to convert SVG to PNG blob
+  const svgToPngBlob = (svg: SVGElement): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        reject(new Error('Canvas context not available'));
+        return;
+      }
+
+      const img = new Image();
+      const svgString = new XMLSerializer().serializeToString(svg);
+      const svgBlob = new Blob([svgString], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(svgBlob);
+
+      img.onload = () => {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        canvas.toBlob((blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error('Failed to convert SVG to PNG'));
+          }
+          URL.revokeObjectURL(url);
+        }, 'image/png');
+      };
+
+      img.onerror = () => {
+        reject(new Error('Failed to load SVG'));
+        URL.revokeObjectURL(url);
+      };
+
+      img.src = url;
+    });
   };
 
   return (
