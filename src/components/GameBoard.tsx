@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Tldraw, Editor, exportAs } from '@tldraw/tldraw';
 import '@tldraw/tldraw/tldraw.css';
@@ -63,13 +64,8 @@ const GameBoard: React.FC<GameBoardProps> = ({
       const shapes = editorRef.current.getCurrentPageShapes();
       const shapeIds = shapes.map(shape => shape.id);
       
-      // Export the drawing as PNG using the correct API
-      const blob = await exportAs(editorRef.current, shapeIds, 'png', {
-        background: true,
-        bounds: editorRef.current.getViewportPageBounds(),
-        padding: 16,
-        darkMode: false,
-      });
+      // Export the drawing as PNG using the correct tldraw v3 API
+      const blob = await exportAs(editorRef.current, shapeIds, 'png');
 
       // Submit to backend
       const result = await processImage(blob, selectedCategory);
