@@ -1,9 +1,8 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, } from 'react';
 import PlayerSetup from '../components/PlayerSetup';
 import GameBoard from '../components/GameBoard';
 import ScoreDisplay from '../components/ScoreDisplay';
-import { checkBackendHealth } from '../utils/api';
 import { getRandomCategory } from '../utils/gameUtils';
 import { useImagePreloader } from '../hooks/useImagePreloader';
 import { Player, GameState, Category } from '../types/game';
@@ -19,20 +18,6 @@ const Index = () => {
   
   const imagesLoaded = useImagePreloader();
 
-  useEffect(() => {
-    // Check backend health on load
-    const checkHealth = async () => {
-      try {
-        const healthy = await checkBackendHealth();
-        setBackendHealthy(healthy);
-      } catch (error) {
-        console.error('Failed to check backend health:', error);
-        setBackendHealthy(false);
-      }
-    };
-    
-    checkHealth();
-  }, []);
 
   const handlePlayersSetup = (playerList: Player[]) => {
     setPlayers(playerList);
@@ -63,25 +48,7 @@ const Index = () => {
     // Don't reset lastUsedCategory to avoid repetition in next game
   };
 
-  if (backendHealthy === false) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl shadow-lg p-8 text-center max-w-md">
-          <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-4">Backend Unavailable</h1>
-          <p className="text-gray-600 mb-6">
-            Unable to connect to the VisComp backend. Please try again later.
-          </p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-          >
-            Retry Connection
-          </button>
-        </div>
-      </div>
-    );
-  }
+
 
   if (backendHealthy === null || !imagesLoaded) {
     return (
