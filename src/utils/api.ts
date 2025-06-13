@@ -1,4 +1,5 @@
-const API_BASE_URL = "http://0.0.0.0:8000";
+
+const API_BASE_URL = "https://viscomp-back-production.up.railway.app/"
 
 export interface ProcessImageResponse {
 	filename: string;
@@ -6,16 +7,6 @@ export interface ProcessImageResponse {
 	cosine_similarity: number;
 }
 
-export const checkBackendHealth = async (): Promise<boolean> => {
-	try {
-		const response = await fetch(`${API_BASE_URL}/health`);
-		const data = await response.json();
-		return data.status === "healthy";
-	} catch (error) {
-		console.error("Health check failed:", error);
-		return false;
-	}
-};
 
 export const processImage = async (imageBlob: Blob, category: string): Promise<ProcessImageResponse> => {
 	const formData = new FormData();
