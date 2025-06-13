@@ -1,5 +1,5 @@
 
-const API_BASE_URL = "https://viscomp-back-production.up.railway.app"
+const API_BASE_URL = "https://viscomp-back-production.up.railway.app";
 
 export interface ProcessImageResponse {
 	filename: string;
